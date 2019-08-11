@@ -13,7 +13,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
-        self._tab_manager = TabManager(self)
+        self._tab_manager = TabManager(self, self)
         self.tabWidget.setTabManager(self._tab_manager)
 
         self.tabWidget.addTab(QWidget(), 'tab 1')
@@ -21,18 +21,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tabWidget.addTab(QWidget(), 'tab 3')
         self.tabWidget.addTab(QWidget(), 'tab 4')
         self.tabWidget.addTab(QWidget(), 'tab 5')
-
-        self._torn_pages = []
-
-    def _on_torn(self, index):
-        widget = self.tabWidget.widget(index)
-        self.tabWidget.removeTab(index)
-        
-        tab_w = QTabWidget()
-        self._torn_pages.append(tab_w)
-        tab_w.addTab(widget, 'new tab')
-        tab_w.move(QCursor.pos())
-        tab_w.show()
 
 
 if __name__ == '__main__':
