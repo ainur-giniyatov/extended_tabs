@@ -18,8 +18,8 @@ class TabManager(QObject):
         self._dragging_image = None
 
     def _detach_tab(self):
-        if self._tab_bar.count() > 1:
-            tab_widget = self._tab_bar.parent()
+        tab_widget = self._tab_bar.parent()
+        if self._tab_bar.count() > 1 or tab_widget.is_main_tab:
             self._detached_widget = tab_widget.widget(self._index)
             self._detached_widget.setWindowTitle(tab_widget.tabText(self._index))
             tab_widget.removeTab(self._index)
@@ -30,7 +30,8 @@ class TabManager(QObject):
             new_window = QMainWindow(self._main_window)
             
             new_tab_widget = TabWidget(new_window)
-            new_tab_widget.setTabManager(self)
+            new_tab_widget.setTabsClosable(True)
+            new_tab_widget.setTabManager(self, False)
             new_window.setCentralWidget(new_tab_widget)
             new_tab_widget.addTab(self._detached_widget, self._detached_widget.windowTitle())
 
@@ -64,7 +65,7 @@ class TabManager(QObject):
             
     def _make_draggin_image(self):
         dragging_image = QWidget(None, Qt.FramelessWindowHint)
-        label = QLabel(self._detached_widget.windowTitle(), self._dragging_image)
+        label = QLabel(self._detached_widget.windowTitle(), dragging_image)
         dragging_image.resize(50, 50)
         dragging_image.show()
         return dragging_image
