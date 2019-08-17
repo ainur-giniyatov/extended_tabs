@@ -1,15 +1,14 @@
 from weakref import WeakSet
 
-from PyQt5.QtCore import QObject, Qt, QPoint
+from PyQt5.QtCore import QObject, Qt, QPoint, QMimeData
 from PyQt5.QtWidgets import QMainWindow, QWidget, QLabel
-from PyQt5.QtGui import QCursor
+from PyQt5.QtGui import QCursor, QDrag, QPixmap
 
 from tab_widget import TabWidget
 
 
 class DraggingState:
     def __init__(self, tab_bar, index):
-        # self.away = False
         self.tab_bar = tab_bar
         self.proximity_rect = tab_bar.rect().adjusted(-10, -10, 10, 10)
         self.index = index
@@ -57,22 +56,28 @@ class TabManager(QObject):
     def left_released(self, pos):
         if self._dragging_state is None:
             return
-            
-        self._drop_tab(pos)
-        if self._dragging_state.dragging_image is not None:
-            self._dragging_state.dragging_image.close()
+
+        # self._drop_tab(pos)
+        # if self._dragging_state.dragging_image is not None:
+        #     self._dragging_state.dragging_image.close()
         self._dragging_state = None
 
     def mouse_drag(self, pos):
-        # self._dragging_state.away = not self._dragging_state.proximity_rect.contains(pos)
         if not self._dragging_state.proximity_rect.contains(pos):
-            if not self._dragging_state.detached_widget:
-                self._detach_tab()
-                # if self._dragging_state.detached_widget:
-                self._dragging_state.dragging_image = self._make_draggin_image()
+            drag = QDrag(self)
+            mime_data = QMimeData()
+            self._dragging_state.detached_widget = self._dragging_state.tab_widget.widget(self._dragging_state.index)
+            # mime_data.setData('internal/tab', b'test')
+            drag.setMimeData(mime_data)
+            drag.setPixmap(QPixmap(40, 40))
+            drag.exec(Qt.LinkAction)
+        #     if not self._dragging_state.detached_widget:
+        #         self._detach_tab()
+        #         # if self._dragging_state.detached_widget:
+        #         self._dragging_state.dragging_image = self._make_draggin_image()
         
-        if self._dragging_state.dragging_image is not None:
-            self._dragging_state.dragging_image.move(QCursor.pos() + QPoint(20, 20))
+        # if self._dragging_state.dragging_image is not None:
+        #     self._dragging_state.dragging_image.move(QCursor.pos() + QPoint(20, 20))
         
     def _make_draggin_image(self):
         dragging_image = QWidget(None, Qt.ToolTip)

@@ -13,6 +13,8 @@ class TabWidget(QTabWidget):
         self.is_main_tab = False
         self.tabCloseRequested.connect(self._on_tabCloseRequested)
         self._tab_manager = None
+
+        self.setAcceptDrops(True)
     
     def setTabManager(self, tab_manager, is_main_tab=True):
         self._tab_manager = tab_manager
@@ -29,4 +31,11 @@ class TabWidget(QTabWidget):
         if self.count() == 0:
             self.lastTabClosed.emit()
 
-        
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasFormat('internal/tab'):
+            event.acceptProposedAction()
+  
+    def dropEvent(self, event):
+        print(event.mimeData().formats())
+        tab = self._tab_manager._dragging_state.detached_widget
+        self.addTab(tab, 'dd')
