@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QMainWindow, QWidget, QLabel
 from PyQt5.QtGui import QCursor, QDrag, QPixmap
 
 from tab_widget import TabWidget
+from tab_drag import TabDrag
 
 
 class DraggingState:
@@ -62,15 +63,11 @@ class TabManager(QObject):
         #     self._dragging_state.dragging_image.close()
         self._dragging_state = None
 
-    def mouse_drag(self, pos):
+    def mouse_drag(self, pos, event):
         if not self._dragging_state.proximity_rect.contains(pos):
-            drag = QDrag(self)
-            mime_data = QMimeData()
-            self._dragging_state.detached_widget = self._dragging_state.tab_widget.widget(self._dragging_state.index)
-            # mime_data.setData('internal/tab', b'test')
-            drag.setMimeData(mime_data)
-            drag.setPixmap(QPixmap(40, 40))
-            drag.exec(Qt.LinkAction)
+            drag = TabDrag(self)
+            if drag.exec():
+                self._drop_tab(None)
         #     if not self._dragging_state.detached_widget:
         #         self._detach_tab()
         #         # if self._dragging_state.detached_widget:
@@ -91,11 +88,10 @@ class TabManager(QObject):
         new_window = QMainWindow(self._main_window)
         new_window.setAttribute(Qt.WA_DeleteOnClose)
         destination_tab_widget = TabWidget(new_window)
-        # destination_tab_widget.lastTabClosed.connect(new_window.close)
+        # destination_tab_widget.lastTabClosed.connect(new_window.hide)
         # destination_tab_widget.setMovable(True)
         destination_tab_widget.setTabsClosable(True)
         destination_tab_widget.setTabManager(self, False)
-        # destination_tab_widget.setMouseTracking(True)
         new_window.setCentralWidget(destination_tab_widget)
         new_window.show()
         return new_window, destination_tab_widget

@@ -28,8 +28,9 @@ class TabBar(QTabBar):
         super().mouseReleaseEvent(event)
 
     def mouseMoveEvent(self, event):
-        super().mouseMoveEvent(event)
         if self._pressed:
-            self._tab_manager.mouse_drag(event.pos())
+            self._tab_manager.mouse_drag(event.pos(), event)
+        else:
+            super().mouseMoveEvent(event)
             
                  
