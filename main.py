@@ -1,10 +1,7 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QTabWidget
-from PyQt5.QtCore import Qt, QRect, pyqtSignal
-from PyQt5.QtGui import QCursor
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
 
-from tab_bar import TabBar
-from tab_manager import TabManager
+from src.extendedtabs.tab_manager import TabManager
 
 from main_window import Ui_MainWindow
 
