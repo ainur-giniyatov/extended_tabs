@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QTabWidget
 from PyQt5.QtCore import pyqtSignal
 
-from tab_bar import TabBar
+from .tab_bar import TabBar
 
 
 class TabWidget(QTabWidget):

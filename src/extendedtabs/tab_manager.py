@@ -4,7 +4,7 @@ from PyQt5.QtCore import QObject, Qt, QPoint
 from PyQt5.QtWidgets import QMainWindow, QWidget, QLabel
 from PyQt5.QtGui import QCursor
 
-from tab_widget import TabWidget
+from .tab_widget import TabWidget
 
 
 class DraggingState:
