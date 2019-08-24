@@ -4,7 +4,7 @@ from PyQt5.QtCore import QObject, Qt, QPoint, QMimeData
 from PyQt5.QtWidgets import QMainWindow, QWidget, QLabel
 from PyQt5.QtGui import QCursor, QDrag, QPixmap
 
-from tab_drag import TabDrag
+from .tab_drag import TabDrag
 from .tab_widget import TabWidget
 
 
