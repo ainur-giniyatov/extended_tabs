@@ -1,20 +1,26 @@
 from weakref import WeakSet
 
-from PyQt5.QtCore import QObject, Qt, QPoint, QMimeData
-from PyQt5.QtWidgets import QMainWindow, QWidget, QLabel
-from PyQt5.QtGui import QCursor, QDrag, QPixmap
+from PyQt5.QtCore import QObject
+from PyQt5.QtGui import QCursor
+from PyQt5.QtWidgets import QApplication
 
-from .tab_drag import TabDrag
 from .tab_widget import TabWidget
+from .tab_drag import TabDrag
+
+
+class ISecondaryWindowCreator:
+    def create(self):
+        raise NotImplementedError
 
 
 class DraggingState:
-    def __init__(self, tab_bar, index):
+    def __init__(self, tab_bar, tab_indx):
         self.tab_bar = tab_bar
+        self.tab_index = tab_indx
         self.proximity_rect = tab_bar.rect().adjusted(-10, -10, 10, 10)
-        self.index = index
-        self.detached_widget = None
+        self.detached_tab = None
         self.dragging_image = None
+        self.dragging_pixmap = None
 
     @property
     def tab_widget(self):
@@ -22,79 +28,54 @@ class DraggingState:
 
 
 class TabManager(QObject):
-    def __init__(self, parent, main_window):
+    def __init__(self, parent):
         super().__init__(parent)
-        self._main_window = main_window
         self._dragging_state = None
+        self._secondary_window_creator = None
 
         self._tab_widgets = WeakSet()
 
-    def _detach_tab(self):
-        tab_widget = self._dragging_state.tab_widget
-        self._dragging_state.detached_widget = tab_widget.widget(self._dragging_state.index)
-        self._dragging_state.detached_widget.setWindowTitle(tab_widget.tabText(self._dragging_state.index))
-        tab_widget.removeTab(self._dragging_state.index)
+    def setSecondaryWindowCreator(self, secondary_window_creator):
+        assert isinstance(secondary_window_creator, ISecondaryWindowCreator)
+        self._secondary_window_creator = secondary_window_creator
 
-    def _drop_tab(self, pos):
-        if self._dragging_state.detached_widget is not None:
+    def _drop_tab(self):
+        detached_tab = self._dragging_state.detached_tab
+        if detached_tab is not None:
             destination_tab_widget = self._get_tab_widget_under_mouse()
             if destination_tab_widget is None:
-                new_window, destination_tab_widget = self.create_subwindow()
+                new_window, destination_tab_widget = self._secondary_window_creator.create()
                 new_window.move(QCursor.pos())
-            
-            index = destination_tab_widget.addTab(self._dragging_state.detached_widget, self._dragging_state.detached_widget.windowTitle())
+
+            source_tab_widget = detached_tab.parent().parent()
+            assert isinstance(source_tab_widget, TabWidget)
+            index = destination_tab_widget.addTab(detached_tab, detached_tab.windowTitle())
             destination_tab_widget.setCurrentIndex(index)
             destination_tab_widget.activateWindow()
 
-        self._dragging_state.detached_widget = None
+        self._dragging_state.detached_tab = None
 
     def _get_tab_widget_under_mouse(self):
-        return next((widget for widget in self._tab_widgets if widget.underMouse()), None)
+        tb = QApplication.widgetAt(QCursor.pos())
+        while tb not in [None, *self._tab_widgets]:
+            tb = tb.parent()
 
-    def left_pressed(self, pos, tab_bar):
-        self._dragging_state = DraggingState(tab_bar, tab_bar.tabAt(pos))
+        return tb
+
+    def left_pressed(self, event, tab_bar):
+        self._dragging_state = DraggingState(tab_bar, tab_bar.tabAt(event.pos()))
         
-    def left_released(self, pos):
+    def left_released(self, event, tab_bar):
         if self._dragging_state is None:
             return
 
-        # self._drop_tab(pos)
-        # if self._dragging_state.dragging_image is not None:
-        #     self._dragging_state.dragging_image.close()
         self._dragging_state = None
 
-    def mouse_drag(self, pos, event):
-        if not self._dragging_state.proximity_rect.contains(pos):
+    def mouse_drag(self, event, tab_bar):
+        if self._dragging_state.tab_bar is tab_bar and not self._dragging_state.proximity_rect.contains(event.pos()):
             drag = TabDrag(self)
             if drag.exec():
-                self._drop_tab(None)
-        #     if not self._dragging_state.detached_widget:
-        #         self._detach_tab()
-        #         # if self._dragging_state.detached_widget:
-        #         self._dragging_state.dragging_image = self._make_draggin_image()
-        
-        # if self._dragging_state.dragging_image is not None:
-        #     self._dragging_state.dragging_image.move(QCursor.pos() + QPoint(20, 20))
-        
-    def _make_draggin_image(self):
-        dragging_image = QWidget(None, Qt.ToolTip)
-        dragging_image.setAttribute(Qt.WA_DeleteOnClose)
-        label = QLabel(self._dragging_state.detached_widget.windowTitle(), dragging_image)
-        dragging_image.resize(50, 50)
-        dragging_image.show()
-        return dragging_image
-
-    def create_subwindow(self):
-        new_window = QMainWindow(self._main_window)
-        new_window.setAttribute(Qt.WA_DeleteOnClose)
-        destination_tab_widget = TabWidget(new_window)
-        # destination_tab_widget.lastTabClosed.connect(new_window.hide)
-        # destination_tab_widget.setMovable(True)
-        destination_tab_widget.setTabsClosable(True)
-        destination_tab_widget.setTabManager(self, False)
-        new_window.setCentralWidget(destination_tab_widget)
-        new_window.show()
-        return new_window, destination_tab_widget
+                self._drop_tab()
 
     def memorizeTabWidget(self, tab_widget):
         self._tab_widgets.add(tab_widget)

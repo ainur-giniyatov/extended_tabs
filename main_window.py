@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\Ainur\Documents\projects\py\main_window.ui'
+# Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.11.3
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -18,12 +18,9 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.tabWidget = TabWidget(self.centralwidget)
-        self.tabWidget.setDocumentMode(False)
-        self.tabWidget.setTabsClosable(True)
-        # self.tabWidget.setMovable(True)
-        self.tabWidget.setObjectName("tabWidget")
-        self.verticalLayout.addWidget(self.tabWidget)
+        self.work_area = WorkArea(self.centralwidget)
+        self.work_area.setObjectName("work_area")
+        self.verticalLayout.addWidget(self.work_area)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 21))
@@ -58,7 +55,6 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuFile.menuAction())
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(-1)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -69,4 +65,4 @@ class Ui_MainWindow(object):
         self.actionAdd.setText(_translate("MainWindow", "Add"))
         self.actionSubwindow.setText(_translate("MainWindow", "Subwindow"))
 
-from src.extendedtabs.tab_widget import TabWidget
+from src.extendedtabs import WorkArea

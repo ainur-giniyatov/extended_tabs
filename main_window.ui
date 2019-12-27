@@ -22,20 +22,7 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="TabWidget" name="tabWidget">
-      <property name="currentIndex">
-       <number>-1</number>
-      </property>
-      <property name="documentMode">
-       <bool>false</bool>
-      </property>
-      <property name="tabsClosable">
-       <bool>true</bool>
-      </property>
-      <property name="movable">
-       <bool>true</bool>
-      </property>
-     </widget>
+     <widget class="WorkArea" name="work_area" native="true"/>
     </item>
    </layout>
   </widget>
@@ -89,9 +76,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>TabWidget</class>
-   <extends>QTabWidget</extends>
-   <header>tab_widget</header>
+   <class>WorkArea</class>
+   <extends>QWidget</extends>
+   <header>extendedtabs</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

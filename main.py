@@ -1,23 +1,45 @@
 import sys
+
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
 
-from src.extendedtabs.tab_manager import TabManager
+from src.extendedtabs import TabWidget
+from src.extendedtabs.tab_manager import TabManager, ISecondaryWindowCreator
 
 from main_window import Ui_MainWindow
+from src.extendedtabs.work_area import WorkArea
+
+
+class SecWinCreator(ISecondaryWindowCreator):
+    def __init__(self, parent_window, tab_man):
+        self._parent_window = parent_window
+        self._tab_manager = tab_man
+
+    def create(self):
+        new_window = QMainWindow(self._parent_window)
+        new_window.setAttribute(Qt.WA_DeleteOnClose)
+        work_area = WorkArea(new_window)
+        work_area.setTabManager(self._tab_manager)
+
+        destination_tab_widget = work_area._create_tab_widget(work_area)
+        # destination_tab_widget.setTabManager(self._tab_manager)
+
+        # destination_tab_widget.setTabsClosable(True)
+
+        new_window.setCentralWidget(work_area)
+        new_window.show()
+        return new_window, destination_tab_widget
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
-        self._tab_manager = TabManager(self, self)
-        self.tabWidget.setTabManager(self._tab_manager)
+        self._tab_manager = TabManager(self)
+        self._tab_manager.setSecondaryWindowCreator(SecWinCreator(self, self._tab_manager))
 
-        self.tabWidget.addTab(QWidget(), 'tab 1')
-        self.tabWidget.addTab(QWidget(), 'tab 2')
-        self.tabWidget.addTab(QWidget(), 'tab 3')
-        self.tabWidget.addTab(QWidget(), 'tab 4')
-        self.tabWidget.addTab(QWidget(), 'tab 5')
+        self.work_area.setTabManager(self._tab_manager)
+        self.work_area.create_dumb()
 
         self.actionTest.triggered.connect(self._on_test)
         self.actionAdd.triggered.connect(self._on_add)
@@ -27,10 +49,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         print(len(self._tab_manager._tab_widgets))
 
     def _on_add(self, state):
-        self.tabWidget.addTab(QWidget(), 'tab 5')
+        tab_widget = self.work_area.get_active_tab_widget()
+        tab_widget.addTab(QWidget(), 'tab 5')
 
     def _on_add_subwindow(self, state):
-        self._tab_manager.create_subwindow()
+        SecWinCreator(self, self._tab_manager).create()
+
 
         
 if __name__ == '__main__':
