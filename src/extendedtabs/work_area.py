@@ -1,46 +1,57 @@
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTabWidget, QSplitter, QTableWidget, QMenu, QTabBar, QLabel
+from functools import partial
+
+from PyQt5.QtCore import Qt, pyqtSignal, QPoint, QVariant
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTabWidget, QSplitter, QTabBar
 
 from .tab_widget import TabWidget
 
 
 class WorkArea(QWidget):
+    emptied = pyqtSignal()
+    tabContextMenuRequested = pyqtSignal(int, int, QPoint)
+    tabInserted = pyqtSignal(int, int)
+    tabRemoved = pyqtSignal(int, int)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._tab_manager = None
         self._vbox_layout = QVBoxLayout(self)
         self.setLayout(self._vbox_layout)
 
+        self._last_activated_tab_widget = None
+        self._tab_widgets = []
+
+        self._data = None
+
+    def destroy(self, destroyWindow=True, destroySubWindows=True):
+        super().destroy(destroyWindow, destroySubWindows)
+        self._tab_manager._del_wa(self)
+
     def get_active_tab_widget(self):
-        fw = self.focusWidget()
+        if self._last_activated_tab_widget is None:
+            self._last_activated_tab_widget = self._create_tab_widget(self)
 
-        if fw is None:
-            fw = self._create_tab_widget(self)
+        return self._last_activated_tab_widget
 
-        while not isinstance(fw, QTabWidget):
-            fw = fw.parent()
-            if fw == self:
-                break
-
-        if fw == self:
-            fw = self._create_tab_widget(self)
-
-        return fw
-
-    def create_dumb(self):
-        tab_widget = self._create_tab_widget(self)
-
-        tab_widget.addTab(QLabel('cwgfwr'), '1')
-        tab_widget.addTab(QTableWidget(), '2')
-        tab_widget.addTab(QTableWidget(), '3')
-        tab_widget.addTab(QTableWidget(), '4')
+    def getTabWidget(self, index):
+        return self._tab_widgets[index]
 
     def setTabManager(self, tab_manager):
         self._tab_manager = tab_manager
+        self._tab_manager._add_wa(self)
+
+    def setData(self, data):
+        self._data = QVariant(data)
+
+    def data(self):
+        return self._data
 
     def _create_tab_widget(self, parent):
         tab_widget = TabWidget(parent)
-
+        self._tab_widgets.append(tab_widget)
+        tab_widget.setMovable(True)
+        tab_widget.currentChanged.connect(self._on_current_tab_changed)
+        tab_widget.lastTabClosed.connect(self._on_last_tab_close)
         tab_widget.setTabManager(self._tab_manager)
 
         if parent is self:
@@ -51,36 +62,37 @@ class WorkArea(QWidget):
         tab_bar.customContextMenuRequested.connect(self._on_context_menu_requested)
 
         tab_widget.setFocus()
+
+        tab_widget.tabInsertedSig.connect(partial(self.tabInserted.emit, self._tab_widgets.index(tab_widget)))
+        tab_widget.tabRemovedSig.connect(partial(self.tabRemoved.emit, self._tab_widgets.index(tab_widget)))
         return tab_widget
+
+    def _on_current_tab_changed(self, tab_index):
+        tab_widget = self.sender()
+        assert isinstance(tab_widget, TabWidget)
+        self._last_activated_tab_widget = tab_widget
 
     def _on_context_menu_requested(self, point):
         tab_bar = self.sender()
         assert isinstance(tab_bar, QTabBar)
         tab_index = tab_bar.tabAt(point)
-
-        def _fe_v():
-            self._on_split(tab_bar, tab_index, Qt.Horizontal)
-
-        def _fe_h():
-            self._on_split(tab_bar, tab_index, Qt.Vertical)
-
-        def _fe_close():
-            self._on_tab_close(tab_bar, tab_index)
-
-        menu = QMenu()
-        menu.addAction('split vertical', _fe_v)
-        menu.addAction('split horizontal', _fe_h)
-        menu.addSeparator()
-        menu.addAction('close', _fe_close)
-        menu.exec(tab_bar.mapToGlobal(point))
-
-    def _on_split(self, tab_bar, tab_index, orientation):
         tab_widget = tab_bar.parent()
+        assert isinstance(tab_widget, TabWidget)
+
+        tab_widget_index = self._tab_widgets.index(tab_widget)
+        self.tabContextMenuRequested.emit(tab_widget_index, tab_index, tab_bar.mapTo(self, point))
+
+    def splitTab(self, tab, orientation):
+        tab_widget = tab.parent().parent()
+
+        if tab_widget.count() <= 1:
+            return
+
         assert isinstance(tab_widget, QTabWidget)
         tab_widgets_parent = tab_widget.parent()
         assert isinstance(tab_widgets_parent, (WorkArea, QSplitter))
 
-        tab = tab_widget.widget(tab_index)
+        tab_index = tab_widget.indexOf(tab)
         tab_text = tab_widget.tabText(tab_index)
         tab_widget.removeTab(tab_index)
 
@@ -101,11 +113,42 @@ class WorkArea(QWidget):
         splitter.addWidget(new_tab_widget)
         new_tab_widget.addTab(tab, tab_text)
 
+        assert splitter.count() == 2
+        splitter.setSizes([10, 10])
         if sizes is not None:
             tab_widgets_parent.setSizes(sizes)
 
-    def _on_tab_close(self, tab_bar, tab_index):
-        tab_widget = tab_bar.parent()
+    def _on_last_tab_close(self):
+        tab_widget = self.sender()
         assert isinstance(tab_widget, QTabWidget)
-        tab = tab_widget.widget(tab_index)
-        tab.deleteLater()
+        self._last_tab_closed(tab_widget)
+
+    def _last_tab_closed(self, tab_widget):
+        if isinstance(tab_widget.parent(), QSplitter):
+            splitter = tab_widget.parent()
+            tab_widget_index = splitter.indexOf(tab_widget)
+            if tab_widget_index == 0:
+                second_tab_widget = splitter.widget(1)
+            elif tab_widget_index == 1:
+                second_tab_widget = splitter.widget(0)
+            else:
+                assert False
+
+            assert isinstance(second_tab_widget, (TabWidget, QSplitter))
+            second_tab_widget.setParent(None)
+            p = splitter.parent()
+            splitter.deleteLater()
+            del splitter
+
+            if isinstance(p, QSplitter):
+                p.addWidget(second_tab_widget)
+            elif isinstance(p, WorkArea):
+                second_tab_widget.setParent(p)
+                p.layout().addWidget(second_tab_widget)
+
+            self._tab_widgets.remove(tab_widget)
+            self._last_activated_tab_widget = second_tab_widget
+
+        else:
+            self._last_activated_tab_widget = tab_widget
+            self.emptied.emit()
