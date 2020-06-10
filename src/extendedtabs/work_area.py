@@ -1,6 +1,6 @@
-from functools import partial
+# from functools import partial
 
-from PyQt5.QtCore import Qt, pyqtSignal, QPoint, QVariant
+from PyQt5.QtCore import Qt, pyqtSignal, QPoint, QVariant, pyqtSlot
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTabWidget, QSplitter, QTabBar
 
 from .tab_widget import TabWidget
@@ -16,6 +16,7 @@ class WorkArea(QWidget):
         super().__init__(parent)
         self._tab_manager = None
         self._vbox_layout = QVBoxLayout(self)
+        self._vbox_layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self._vbox_layout)
 
         self._last_activated_tab_widget = None
@@ -63,9 +64,22 @@ class WorkArea(QWidget):
 
         tab_widget.setFocus()
 
-        tab_widget.tabInsertedSig.connect(partial(self.tabInserted.emit, self._tab_widgets.index(tab_widget)))
-        tab_widget.tabRemovedSig.connect(partial(self.tabRemoved.emit, self._tab_widgets.index(tab_widget)))
+        tab_widget.tabInsertedSig.connect(self._on_tab_inserted)
+        tab_widget.tabRemovedSig.connect(self._on_tab_removed)
+
         return tab_widget
+
+    @pyqtSlot(int)
+    def _on_tab_inserted(self, tab_index):
+        tab_widget = self.sender()
+        tab_widget_index = self._tab_widgets.index(tab_widget)
+        self.tabInserted.emit(tab_widget_index, tab_index)
+
+    @pyqtSlot(int)
+    def _on_tab_removed(self, tab_index):
+        tab_widget = self.sender()
+        tab_widget_index = self._tab_widgets.index(tab_widget)
+        self.tabRemoved.emit(tab_widget_index, tab_index)
 
     def _on_current_tab_changed(self, tab_index):
         tab_widget = self.sender()
