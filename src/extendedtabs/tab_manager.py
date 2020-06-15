@@ -52,6 +52,11 @@ class TabManager(QObject):
     def createSecondaryWindow(self):
         return self._secondary_window_creator.create()
 
+    def raise_tab(self, widget):
+        tab_widget = next((tw for tw in self._tab_widgets if tw.indexOf(widget) >= 0), None)
+        assert tab_widget is not None
+        tab_widget.setCurrentWidget(widget)
+
     def _drop_tab(self):
         detached_tab = self._dragging_state.detached_tab
         if detached_tab is not None:

@@ -7,7 +7,7 @@ print(setuptools.find_packages('src', exclude=['main_window.py']))
 
 setuptools.setup(
     name="extended-tabs",
-    version="0.0.2",
+    version="0.0.3",
     author="Ainur Giniyatov",
     # author_email="author@example.com",
     # description="A small example package",
