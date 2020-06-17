@@ -11,6 +11,7 @@ class WorkArea(QWidget):
     tabContextMenuRequested = pyqtSignal(int, int, QPoint)
     tabInserted = pyqtSignal(int, int)
     tabRemoved = pyqtSignal(int, int)
+    tabFocused = pyqtSignal(int, int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -95,7 +96,7 @@ class WorkArea(QWidget):
 
         tab_bar = tab_widget.tabBar()
         tab_bar.setStyleSheet('QTabBar::tab:selected{background: qlineargradient(x1: 0, y1: 0.85, x2: 0, y2: 1, stop: 0 white, stop: 1 blue)}')
-
+        self.tabFocused.emit(self._tab_widgets.index(tab_widget), tab_index)
 
     def _set_focused_page(self, widget: QWidget):
         assert widget is not None

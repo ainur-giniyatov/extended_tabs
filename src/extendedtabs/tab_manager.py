@@ -157,3 +157,4 @@ class TabManager(QObject):
                     tw.tabBar().setStyleSheet('')
 
                 tab_widget.tabBar().setStyleSheet('QTabBar::tab:selected{background: qlineargradient(x1: 0, y1: 0.85, x2: 0, y2: 1, stop: 0 white, stop: 1 blue)}')
+                work_area.tabFocused.emit(work_area._tab_widgets.index(tab_widget), tab_widget.currentIndex())

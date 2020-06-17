@@ -52,6 +52,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionAdd.triggered.connect(self._on_add)
         self.actionSubwindow.triggered.connect(self._on_add_subwindow)
 
+        self.work_area.tabFocused.connect(self._on_tab_focused)
+
     def _on_test(self, state):
         print(len(self._tab_manager._tab_widgets))
 
@@ -87,6 +89,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         work_area, tab_widget_index, tab_index = t
         tab_widget = work_area.getTabWidget(tab_widget_index)
         tab_widget.removeTab(tab_index)
+
+    def _on_tab_focused(self, tab_widget_index, tab_index):
+        print(tab_widget_index, tab_index)
 
 
 if __name__ == '__main__':
