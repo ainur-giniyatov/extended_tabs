@@ -23,6 +23,7 @@ class WorkArea(QWidget):
         self._tab_widgets = []
 
         self._data = None
+        self._focused_page: QWidget = None
 
     def destroy(self, destroyWindow=True, destroySubWindows=True):
         super().destroy(destroyWindow, destroySubWindows)
@@ -52,6 +53,7 @@ class WorkArea(QWidget):
         self._tab_widgets.append(tab_widget)
         tab_widget.setMovable(True)
         tab_widget.currentChanged.connect(self._on_current_tab_changed)
+        tab_widget.tabBarClicked.connect(self._on_current_tab_changed)
         tab_widget.lastTabClosed.connect(self._on_last_tab_close)
         tab_widget.setTabManager(self._tab_manager)
 
@@ -81,10 +83,24 @@ class WorkArea(QWidget):
         tab_widget_index = self._tab_widgets.index(tab_widget)
         self.tabRemoved.emit(tab_widget_index, tab_index)
 
+    @pyqtSlot(int)
     def _on_current_tab_changed(self, tab_index):
         tab_widget = self.sender()
         assert isinstance(tab_widget, TabWidget)
         self._last_activated_tab_widget = tab_widget
+        self._set_focused_page(tab_widget.widget(tab_index))
+
+        for tw in self._tab_widgets:
+            tw.tabBar().setStyleSheet('')
+
+        tab_bar = tab_widget.tabBar()
+        tab_bar.setStyleSheet('QTabBar::tab:selected{background: qlineargradient(x1: 0, y1: 0.85, x2: 0, y2: 1, stop: 0 white, stop: 1 blue)}')
+
+
+    def _set_focused_page(self, widget: QWidget):
+        assert widget is not None
+        self._focused_page = widget
+        self._focused_page.setFocus()
 
     def _on_context_menu_requested(self, point):
         tab_bar = self.sender()

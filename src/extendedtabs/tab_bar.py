@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import QTabBar
+from PyQt5.QtGui import QPainter
+from PyQt5.QtWidgets import QTabBar, QStyle, QStyleOptionTab, QStylePainter
 from PyQt5.QtCore import Qt
 
 
@@ -9,6 +10,7 @@ class TabBar(QTabBar):
         self._away = False
         self._tab_manager = None
         self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self._focused_tab_index = 0
 
     def setTabManager(self, tab_manager):
         self._tab_manager = tab_manager
@@ -30,3 +32,11 @@ class TabBar(QTabBar):
             self._tab_manager.mouse_drag(event, self)
         else:
             super().mouseMoveEvent(event)
+
+    # def paintEvent(self, paint_event):
+    #     painter = QStylePainter(self)
+    #     so = QStyleOptionTab()
+    #     so.initFrom(self)
+    #     so.text = 'kuku'
+    #     painter.drawControl(QStyle.CE_TabBarTab, so)
+        # super().paintEvent(paint_event)

@@ -2,9 +2,9 @@ from functools import partial
 from weakref import WeakSet
 from typing import Callable
 
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication, QWidget
 
 from .work_area import WorkArea
 from .tab_widget import TabWidget
@@ -44,6 +44,8 @@ class TabManager(QObject):
 
         self._tab_widgets = WeakSet()
         self._work_areas = []
+
+        QApplication.instance().focusChanged.connect(self._on_app_focus_changed)
 
     def setSecondaryWindowCreator(self, secondary_window_creator):
         assert isinstance(secondary_window_creator, ISecondaryWindowCreator)
@@ -134,4 +136,24 @@ class TabManager(QObject):
         wa = self.sender()
         assert isinstance(wa, WorkArea)
 
-        print(tab_widget_index, tab_index)
+        # print(tab_widget_index, tab_index)
+
+    @pyqtSlot('QWidget*', 'QWidget*')
+    def _on_app_focus_changed(self, old: QWidget, now: QWidget):
+        if now is not None:
+            p = now.parentWidget()
+            work_area = None
+            tab_widget = None
+            while p is not None:
+                if isinstance(p, TabWidget):
+                    tab_widget = p
+                elif isinstance(p, WorkArea):
+                    work_area = p
+
+                p = p.parentWidget()
+
+            if None not in (work_area, tab_widget):
+                for tw in work_area._tab_widgets:
+                    tw.tabBar().setStyleSheet('')
+
+                tab_widget.tabBar().setStyleSheet('QTabBar::tab:selected{background: qlineargradient(x1: 0, y1: 0.85, x2: 0, y2: 1, stop: 0 white, stop: 1 blue)}')

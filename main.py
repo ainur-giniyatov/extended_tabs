@@ -1,7 +1,7 @@
 import sys
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QTableWidget, QMenu
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QTableWidget, QMenu, QLineEdit
 
 from src.extendedtabs import TabWidget
 from src.extendedtabs.tab_manager import TabManager, ISecondaryWindowCreator
@@ -57,7 +57,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def _on_add(self, state):
         tab_widget = self.work_area.get_active_tab_widget()
-        tab_widget.addTab(QWidget(), 'tab 5')
+        tab_widget.addTab(QLineEdit(), 'tab 5')
 
     def _on_add_subwindow(self, state):
         SecWinCreator(self, self._tab_manager).create()
