@@ -89,6 +89,9 @@ class WorkArea(QWidget):
         tab_widget = self.sender()
         assert isinstance(tab_widget, TabWidget)
         self._last_activated_tab_widget = tab_widget
+        if tab_index >= 0:
+            self._set_focused_page(tab_widget.widget(tab_index))
+
         self._set_focused_page(tab_widget.widget(tab_index))
 
         for tw in self._tab_widgets:
