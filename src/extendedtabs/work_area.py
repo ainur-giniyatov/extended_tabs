@@ -186,3 +186,9 @@ class WorkArea(QWidget):
         else:
             self._last_activated_tab_widget = tab_widget
             self.emptied.emit()
+
+    def get_tabs(self):
+        for tw in self._tab_widgets:
+            for i in range(tw.count()):
+                tab = tw.widget(i)
+                yield tab

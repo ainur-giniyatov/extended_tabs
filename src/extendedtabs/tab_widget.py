@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QTabWidget
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, pyqtSlot
 
 from .tab_bar import TabBar
 
@@ -17,7 +17,7 @@ class TabWidget(QTabWidget):
         self._tab_manager = None
 
         self.setAcceptDrops(True)
-    
+
     def setTabManager(self, tab_manager):
         self._tab_manager = tab_manager
         self._tab_bar.setTabManager(self._tab_manager)
@@ -32,3 +32,12 @@ class TabWidget(QTabWidget):
         self.tabRemovedSig.emit(index)
         if self.count() == 0:
             self.lastTabClosed.emit()
+
+    def addTab(self, widget, *__args):
+        widget.windowTitleChanged.connect(self._on_window_title_changed)
+        return super().addTab(widget, *__args)
+
+    @pyqtSlot(str)
+    def _on_window_title_changed(self, new_title):
+        widget = self.sender()
+        self.setTabText(self.indexOf(widget), new_title)
