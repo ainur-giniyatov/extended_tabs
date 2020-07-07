@@ -78,7 +78,7 @@
   <customwidget>
    <class>WorkArea</class>
    <extends>QWidget</extends>
-   <header>extendedtabs</header>
+   <header>src.extendedtabs</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -1,6 +1,6 @@
-from PyQt5.QtCore import QObject, Qt, QEvent, QPoint
-from PyQt5.QtGui import QGuiApplication, QCursor
-from PyQt5.QtWidgets import QLabel
+from qtpy.QtCore import QObject, Qt, QEvent, QPoint
+from qtpy.QtGui import QGuiApplication, QCursor
+from qtpy.QtWidgets import QLabel
 
 
 class TabDrag(QObject):

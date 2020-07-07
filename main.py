@@ -1,9 +1,11 @@
 import sys
+import os
+# os.environ['QT_API'] = 'pyside2'
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QTableWidget, QMenu, QLineEdit
+from qtpy import API
+from qtpy.QtCore import Qt
+from qtpy.QtWidgets import QApplication, QMainWindow, QLabel, QTableWidget, QMenu, QLineEdit
 
-from src.extendedtabs import TabWidget
 from src.extendedtabs.tab_manager import TabManager, ISecondaryWindowCreator
 
 from main_window import Ui_MainWindow
@@ -73,7 +75,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         menu.addAction('Split horizontally', self._on_tab_split).setData([work_area, twi, tbi, Qt.Vertical])
         menu.addSeparator()
         menu.addAction('Close', self._on_tab_close).setData([work_area, twi, tbi])
-        menu.exec(glob_point)
+        menu.exec_(glob_point)
 
     def _on_tab_split(self):
         action = self.sender()
@@ -97,5 +99,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 if __name__ == '__main__':
     qapp = QApplication(sys.argv)
     main_window = MainWindow()
+    main_window.setWindowTitle(f'using {API}')
     main_window.show()
     exit(qapp.exec_())
